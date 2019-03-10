@@ -32,7 +32,7 @@ from turtle import Turtle, Screen
 COORDINATE_MATRIX1 = np.matrix([[0, 1], [cos(pi/6), -1/2]])
 COORDINATE_MATRIX2 = np.linalg.inv(COORDINATE_MATRIX1)
 
-COMONLY = True
+COMONLY = False
 DEBUG = False
 
 RADIUS = 300
@@ -306,29 +306,29 @@ def run(gui):
         game_state.dir_crossings[crossing] = (1,n)
         game_state.dir_paths[path] = n
         gui.draw_board(game_state)
-        print(f"Player {n} build a settlement at {crossing}.")
-        print(f"Player {n} build a road at {path}.")
+        gui.print(f"Player {n} build a settlement at {crossing}.")
+        gui.print(f"Player {n} build a road at {path}.")
     for i in reversed(range(number_players)):
         n = (beginner+i)%number_players
         crossing, path = players[n].initial_settlement(game_state)
         game_state.dir_crossings[crossing] = (1,n)
         game_state.dir_paths[path] = n
-        print(f"Player {n} build a settlement at {crossing}.")
-        print(f"Player {n} build a road at {path}.")
+        gui.print(f"Player {n} build a settlement at {crossing}.")
+        gui.print(f"Player {n} build a road at {path}.")
         for hexcoor in game_state.adjacent_hexcoors(crossing):
             hexx = game_state.dir_hexes[hexcoor]
             if not hexx in NO_YIELDS:
                 game_state.dir_resources[n][hexx] += 1
         gui.draw_board(game_state)
-    print(game_state.dir_resources)
+    gui.print(game_state.dir_resources)
 
     # Actual game loops
     n = beginner
     turn = 0
     running = True
     winner = None
-    if input("Pause...") in ("q", "quit"):
-        running = False
+    #if input("Pause...") in ("q", "quit"):
+        #running = False
     while running:
         turn += 1
 
@@ -339,11 +339,11 @@ def run(gui):
             if roundd == 1000:
                 running = False
             else:
-                print(f"We're going into round {roundd}!")
+                gui.print(f"We're going into round {roundd}!")
 
         # Dice roll
         w = roll_dice()
-        print(f"Player {n} rolled a {w}.")
+        gui.print(f"Player {n} rolled a {w}.")
 
         if w == 7:
             # Robber
@@ -352,7 +352,7 @@ def run(gui):
                 if hand > 7:
                     players[n].get_robbed(game_state)
                     if not game_state.number_resources(n) == (hand - hand//2):
-                        print("Player {n} cheated the robber!")
+                        gui.print("Player {n} cheated the robber!")
             hexcoor, player = players[n].set_robber(game_state)
             game_state.robber = hexcoor
             if not player == None:
@@ -410,7 +410,7 @@ def run(gui):
                     if game_state.pays(n, cost):
                         game_state.dir_resources[n][resource2] += 1
                     elif not DEBUG:
-                        print("You cannot afford to do that!")
+                        gui.print("You cannot afford to do that!")
                 except:
                     print("Something failed!")
 
@@ -426,11 +426,11 @@ def run(gui):
                             cost = PRICES["road"]
                             if game_state.pays(n, cost):
                                 game_state.dir_paths[path] = n
-                                print(f"Player {n} build a road at {path}.")
+                                gui.print(f"Player {n} build a road at {path}.")
                             elif not DEBUG:
-                                print("You cannot afford to do that!")
+                                gui.print("You cannot afford to do that!")
                         else:
-                            print("That is not an accessible path location!")
+                            gui.print("That is not an accessible path location!")
                     except Exception as e:
                         print("Something failed!")
                         print(e)
@@ -441,11 +441,11 @@ def run(gui):
                             cost = PRICES["settlement"]
                             if game_state.pays(n, cost):
                                 game_state.dir_crossings[crossing] = (1,n)
-                                print(f"Player {n} build a settlement at {crossing}.")
+                                gui.print(f"Player {n} build a settlement at {crossing}.")
                             elif not DEBUG:
-                                print("You cannot afford to do that!")
+                                gui.print("You cannot afford to do that!")
                         else:
-                            print("That is not an accessible settlement location!")
+                            gui.print("That is not an accessible settlement location!")
                     except Exception as e:
                         print("Something failed!")
                         print(e)
@@ -456,11 +456,11 @@ def run(gui):
                             cost = PRICES["city"]
                             if game_state.pays(n, cost):
                                 game_state.dir_crossings[crossing] = (2,n)
-                                print(f"Player {n} build a city at {crossing}.")
+                                gui.print(f"Player {n} build a city at {crossing}.")
                             elif not DEBUG:
-                                print("You cannot afford to do that!")
+                                gui.print("You cannot afford to do that!")
                         else:
-                            print("That is not the location of one of your settlements!")
+                            gui.print("That is not the location of one of your settlements!")
                     except Exception as e:
                         print("Something failed!")
                         print(e)
@@ -468,9 +468,9 @@ def run(gui):
                     cost = PRICES["devcard"]
                     if game_state.pays(n, cost):
                         game_state.dir_devcards[n] += 1
-                        print(f"Player {n} bought a devcard.")
+                        gui.print(f"Player {n} bought a devcard.")
                     elif not DEBUG:
-                        print("You cannot afford to do that!")
+                        gui.print("You cannot afford to do that!")
 
             # Command play devcard
             elif command in ("p", "play", "d", "devcard"):
@@ -484,17 +484,17 @@ def run(gui):
                             game_state.dir_resources[player2][resource] -= 1
                             game_state.dir_resources[n][resource] += 1
                     gui.draw_board(game_state)
-                    print(f"Player {n} played a knight and robbed player {player2}.")
+                    gui.print(f"Player {n} played a knight and robbed player {player2}.")
                     if game_state.largest_army[1] == n:
-                        print(f"Player {n} has the larges army!")
+                        gui.print(f"Player {n} has the larges army!")
                 elif not DEBUG:
-                    print(f"You do not have a devcard.")
+                    gui.print(f"You do not have a devcard.")
             else:
-                print(f"Unknown action: {action}")
+                gui.print(f"Unknown action: {action}")
 
         if turn%(10*number_players) == 0:
             gui.draw_board(game_state)
-            game_state.print_state()
+            #game_state.print_state()
             #if input("Pause...") in ("q", "quit"):
                 #running = False
         n = (n+1)%number_players
@@ -504,7 +504,7 @@ def run(gui):
     vps = {}
     for n in range(number_players):
         vps[n] = game_state.victory_points(n)
-    print("The game ends!")
+    gui.print("The game ends!")
     for n in range(number_players):
         print(f"Player {n} has {vps[n]} victory points!")
     print(f"The winner is player {winner}!")
@@ -703,17 +703,7 @@ class AIUser(AI):
 ########################
 
 
-class GuiTurtle:
-    def __init__(self):
-        self.t = Turtle()
-        self.s = self.t.getscreen()
-        self.clear()
-
-    def clear(self):
-        self.s.clear()
-        self.s.mode("logo")
-        self.s.tracer(False)
-
+class GuiMinimal:
     def ask_number_players(self):
         while True:
             n = input("How many players will play? ")
@@ -723,11 +713,42 @@ class GuiTurtle:
                 print("Invalid answer, only 3 or 4 players possible!")
 
     def ask_player_type(self, number, list_type):
+        print("TEST")
+        print(COMONLY)
         if (number == 0) and (not COMONLY):
+            print("hey")
             return AIUser
         else:
             return AICom
     
+    def draw_board(self, game_state):
+        game_state.print_state()
+
+    def intro(self):
+        s = "WELCOME TO HESPERUS"
+        t = "*****"
+        s = " ".join([t,s,t])
+        u = len(s)*"*"
+        s = "\n".join([u,s,u])
+        print(s)
+
+    def print(self, string):
+        print(string)
+        #pass
+
+class GuiTurtle(GuiMinimal):
+    def __init__(self):
+        self.t = Turtle()
+        self.s = self.t.getscreen()
+        self.s.tracer(False)
+        self.s.mode("logo")
+        self.clear()
+
+    def clear(self):
+        self.s.clear()
+        self.s.mode("logo")
+        self.s.tracer(False)
+
     def draw_board(self, game_state):
         self.clear()
         self.t.pu()
@@ -908,6 +929,17 @@ class GuiTurtle:
 #####################
 
 
+def test():
+    n = 100
+    list_time = []
+    for i in range(n):
+        start = time.time()
+        run(gui)
+        list_time.append(time.time()-start)
+    mu = sum(list_time)/n
+    sigma = np.sqrt( sum([(t-mu)**2 for t in list_time]) /n)
+    print(mu, sigma)
+
 def main():
     global DEBUG
     if input("Start in debug mode? ") in ("n", "N", "no"):
@@ -919,13 +951,13 @@ def main():
     else:
         COMONLY = True
 
-    screen = Screen()
-    screen.tracer(False)
-    screen.mode("logo")
-
     gui = GuiTurtle()
+    #gui = GuiMinimal()
     gui.intro()
-    run(gui)
+    if COMONLY:
+        test()
+    else:
+        run(gui)
     input("Hesperus terminated successfully! (Press enter to exit)")
 
 if __name__=="__main__":
