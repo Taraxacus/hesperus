@@ -32,8 +32,8 @@ from turtle import Turtle, Screen
 COORDINATE_MATRIX1 = np.matrix([[0, 1], [cos(pi/6), -1/2]])
 COORDINATE_MATRIX2 = np.linalg.inv(COORDINATE_MATRIX1)
 
-COMONLY = False
-DEBUG = False
+DEBUG = True
+COMONLY = True
 
 RADIUS = 300
 HOUSE  = 50
@@ -181,10 +181,10 @@ class GameState:
         return hexcoors
 
     def free_crossings(self):
-        return {crossing for crossing in self.dir_crossings if self.dir_crossings[crossing] == None}
+        return {crossing for crossing in self.dir_crossings if self.dir_crossings[crossing] is None}
 
     def free_paths(self):
-        return {path for path in self.dir_paths if self.dir_paths[path] == None}
+        return {path for path in self.dir_paths if self.dir_paths[path] is None}
 
     def available_crossings(self):
         free_crossings = self.free_crossings()
@@ -280,8 +280,11 @@ class GameState:
 ####################
 
 def run(gui):
+    times = []
+    time_start = time.time()
+
     # Initialize players
-    if not DEBUG:
+    if not COMONLY:
         number_players = gui.ask_number_players()
     else:
         number_players = 4
@@ -298,7 +301,9 @@ def run(gui):
         if not player.check():
             return False
 
+    times.append(time.time() - time_start)
     # Initial settlements
+    gui.print("\n" + 5*"*" + " INITIAL SETTLEMENTS " + 5*"*" + "\n")
     beginner = randint(0, game_state.number_players-1)
     for i in range(number_players):
         n = (beginner+i)%number_players
@@ -322,7 +327,9 @@ def run(gui):
         gui.draw_board(game_state)
     gui.print(game_state.dir_resources)
 
+    times.append(time.time() - time_start)
     # Actual game loops
+    gui.print("\n" + 5*"*" + " GAME STARTS " + 5*"*" + "\n")
     n = beginner
     turn = 0
     running = True
@@ -341,18 +348,21 @@ def run(gui):
             else:
                 gui.print(f"We're going into round {roundd}!")
 
+        #gui.print("\n" + 5*"*" + f" ROUND {roundd}, TURN {turn}, PLAYER {n} " + 5*"*" + "\n")
+        gui.print("\n" + 5*"*" + f" TURN {turn}, PLAYER {n} " + 5*"*" + "\n")
+
         # Dice roll
         w = roll_dice()
         gui.print(f"Player {n} rolled a {w}.")
 
         if w == 7:
             # Robber
-            for n in range(number_players):
-                hand = game_state.number_resources(n)
+            for m in range(number_players):
+                hand = game_state.number_resources(m)
                 if hand > 7:
-                    players[n].get_robbed(game_state)
-                    if not game_state.number_resources(n) == (hand - hand//2):
-                        gui.print("Player {n} cheated the robber!")
+                    players[m].get_robbed(game_state)
+                    if not game_state.number_resources(m) == (hand - hand//2):
+                        gui.print("Player {m} cheated the robber!")
             hexcoor, player = players[n].set_robber(game_state)
             game_state.robber = hexcoor
             if not player == None:
@@ -491,6 +501,7 @@ def run(gui):
                     gui.print(f"You do not have a devcard.")
             else:
                 gui.print(f"Unknown action: {action}")
+            gui.draw_board(game_state)
 
         if turn%(10*number_players) == 0:
             gui.draw_board(game_state)
@@ -498,16 +509,18 @@ def run(gui):
             #if input("Pause...") in ("q", "quit"):
                 #running = False
         n = (n+1)%number_players
-
-    gui.draw_board(game_state)
+        #print(n)
 
     vps = {}
     for n in range(number_players):
         vps[n] = game_state.victory_points(n)
     gui.print("The game ends!")
     for n in range(number_players):
-        print(f"Player {n} has {vps[n]} victory points!")
-    print(f"The winner is player {winner}!")
+        gui.print(f"Player {n} has {vps[n]} victory points!")
+    gui.print(f"The winner is player {winner}!")
+
+    times.append(time.time() - time_start)
+    return turn, times
 
 #def test(self):
 #    n = roll_dice()
@@ -634,7 +647,10 @@ class AICom(AIRandom):
             hexcoors = game_state.adjacent_hexcoors(crossing)
             for hexcoor in hexcoors:
                 if hexcoor in game_state.dir_chips:
-                    points += dir_points[game_state.dir_chips[hexcoor]]
+                    m = 1
+                    if game_state.dir_hexes[hexcoor] in ["G", "O"]:
+                        m = 1.5
+                    points += m*dir_points[game_state.dir_chips[hexcoor]]
             if points == best_points:
                 best_crossings.add(crossing)
             elif points > best_points:
@@ -655,9 +671,10 @@ class AIUser(AI):
         return True
 
     def initial_settlement(self, game_state):
+        n = self.number
         while True:
             #raw_crossing = input("Where do you want to build your settlement? (Two numbers separated by space) ")
-            raw_crossing = input("\nWhere do you want to build your settlement? ")
+            raw_crossing = input(f"\nYou are player {n}. Where do you want to build your settlement? ")
             if raw_crossing == "r":
                 crossing = choice(tuple(game_state.available_crossings()))
                 break
@@ -704,6 +721,9 @@ class AIUser(AI):
 
 
 class GuiMinimal:
+    def __init__(self,test=False):
+        self.test = test
+
     def ask_number_players(self):
         while True:
             n = input("How many players will play? ")
@@ -713,16 +733,28 @@ class GuiMinimal:
                 print("Invalid answer, only 3 or 4 players possible!")
 
     def ask_player_type(self, number, list_type):
-        print("TEST")
-        print(COMONLY)
-        if (number == 0) and (not COMONLY):
-            print("hey")
-            return AIUser
-        else:
+        #print("TEST")
+        #print(COMONLY)
+        #if (number in (0,1)) and (not COMONLY):
+            #print("hey")
+            #return AIUser
+        #else:
+            #return AICom
+        if COMONLY:
             return AICom
+        else:
+            while True:
+                raw_player = input(f"Who shall play player {number}? ")
+                if raw_player.lower() in ("com", "aicom"):
+                    return AICom
+                elif raw_player.lower() in ("user", "aiuser"):
+                    return AIUser
+                else:
+                    print("That is not a valid player type!")
     
     def draw_board(self, game_state):
-        game_state.print_state()
+        if not self.test:
+            game_state.print_state()
 
     def intro(self):
         s = "WELCOME TO HESPERUS"
@@ -733,19 +765,21 @@ class GuiMinimal:
         print(s)
 
     def print(self, string):
-        print(string)
+        if not self.test:
+            print(string)
         #pass
 
 class GuiTurtle(GuiMinimal):
-    def __init__(self):
+    def __init__(self, test=False):
+        self.test = test
+
         self.t = Turtle()
         self.s = self.t.getscreen()
-        self.s.tracer(False)
         self.s.mode("logo")
         self.clear()
 
     def clear(self):
-        self.s.clear()
+        self.s.reset()
         self.s.mode("logo")
         self.s.tracer(False)
 
@@ -808,6 +842,10 @@ class GuiTurtle(GuiMinimal):
         self.t.goto(hex2cart(game_state.robber))
         self.t.dot(35, COLORS["robber"])
 
+        # Sleep for a moment
+        self.s.update()
+        time.sleep(0.1)
+
     def drawhex(self, color):
         t = self.t
         p,h = t.pos(),t.heading()
@@ -830,26 +868,33 @@ class GuiTurtle(GuiMinimal):
 
     ### INTRO ANIMATION
     def intro(self):
+        if DEBUG and __name__ == "__main__":
+            return
         t = self.t
         t.ht()
         t.pu()
         s = self.s
+        s.update()
 
         # Sky circle
         t.goto(RADIUS, 0)
         t.seth(180)
-        if not DEBUG:
-            s.tracer(True)
+        #s.tracer(True)
         t.pencolor(COLORS["sky"])
         t.pensize(4)
         t.pd()
         t.fillcolor(COLORS["sky"])
         t.begin_fill()
-        t.circle(-RADIUS)
+        #t.circle(-RADIUS)
+        for i in range(12):
+            time.sleep(0.1)
+            t.circle(-RADIUS, 30)
+            s.update()
+            #print("30deg")
         t.end_fill()
         t.pu()
-        if not DEBUG:
-            s.tracer(False)
+        #s.tracer(False)
+        s.update()
 
         # Star
         t.goto(0, 1/2*RADIUS)
@@ -875,6 +920,7 @@ class GuiTurtle(GuiMinimal):
             t.bk(STAR)
             t.lt(30)
         t.pu()
+        s.update()
 
         # Silhouette
         t.goto(RADIUS, 0)
@@ -909,17 +955,17 @@ class GuiTurtle(GuiMinimal):
         t.lt(90)
         t.fd(RADIUS-7/4*HOUSE)
         t.end_fill()
+        s.update()
 
         # Title
-        s.update()
+        #s.update()
         t.goto(0,-1/2*RADIUS)
-        if not DEBUG:
-            print("Now sleeping, you are not in debug mode!")
-            time.sleep(1)
+        #s.update()
+        print("Now sleeping, you are not in debug mode!")
+        time.sleep(1)
         t.write("Hesperus", align="center", font=("Serif", 50, "bold"))
-        s.update()
-        if not DEBUG:
-            time.sleep(3)
+        #s.update()
+        time.sleep(3)
         time.sleep(0.3)
         t.reset()
 
@@ -929,19 +975,50 @@ class GuiTurtle(GuiMinimal):
 #####################
 
 
-def test():
-    n = 100
-    list_time = []
+def test(gui):
+    try:
+        n = int(input("Number of tests? "))
+    except:
+        n = 100
+    list_turns= []
+    list_times= []
     for i in range(n):
-        start = time.time()
-        run(gui)
-        list_time.append(time.time()-start)
-    mu = sum(list_time)/n
-    sigma = np.sqrt( sum([(t-mu)**2 for t in list_time]) /n)
-    print(mu, sigma)
+        turn, times = run(gui)
+        list_turns.append(turn)
+        list_times.append(times)
+        print(times)
+        if i == 0:
+            list_times.pop()
+    len_times = len(list_times[0])
+    list_time = [times[len_times-1] - times[0] for times in list_times]
+    time_mu = sum(list_time)/n
+    time_sigma = np.sqrt( sum([(t-time_mu)**2 for t in list_time]) /n)
+    time_rel = 100*time_sigma/time_mu
+    turns_mu = sum(list_turns)/n
+    turns_sigma = np.sqrt( sum([(t-turns_mu)**2 for t in list_turns]) /n)
+    turns_rel = 100*turns_sigma/turns_mu
+    #print(mu, sigma)
+    print(f"Average time per game: {time_mu} +- {time_sigma} seconds. Relative deviation: {time_rel} %")
+    print(f"Average number of turns per game: {turns_mu} +- {turns_sigma}. Relative deviation: {turns_rel} %")
+    #turn_time = time_sigma/turns_sigma
+    #print(f"Estimated time per turn: {turn_time} seconds")
+    #list_pregame = [list_time[i] - list_turns[i]*turn_time for i in range(n)]
+    #print(f"List of estimated pre-game times: {list_pregame}")
+    for i in range(len_times):
+        list_time_i = [times[i] for times in list_times]
+        time_mu_i = sum(list_time_i)/n
+        time_sigma_i = np.sqrt( sum([(t-time_mu_i)**2 for t in list_time_i]) /n)
+        rel = 100* time_sigma_i/time_mu_i
+        print(f"Average time in stage {i}: {time_mu_i} +- {time_sigma_i} seconds. Relative deviation: {rel} %")
+        if i == len_times-1:
+            total_time = sum(list_time_i)
+            total_turns = sum(list_turns)
+            turn_time = total_time/total_turns
+            print(f"Average turn time: {turn_time} seconds")
 
 def main():
     global DEBUG
+    global COMONLY
     if input("Start in debug mode? ") in ("n", "N", "no"):
         DEBUG = False
     else:
@@ -950,15 +1027,36 @@ def main():
         COMONLY = False
     else:
         COMONLY = True
-
-    gui = GuiTurtle()
-    #gui = GuiMinimal()
-    gui.intro()
     if COMONLY:
-        test()
+        if input("Run some test games? ") in ("n", "N", "no"):
+            tests = False
+        else:
+            tests = True
+    else:
+        tests = False
+
+    if tests:
+        gui = GuiMinimal(test=True)
+    else:
+        gui = GuiTurtle()
+    #gui.set_vars(comonly, debug)
+    gui.intro()
+    if tests:
+        test(gui)
     else:
         run(gui)
+    #if COMONLY:
+        #test(gui)
+    #else:
+        #run(gui)
     input("Hesperus terminated successfully! (Press enter to exit)")
+
+#def main2():
+    #global DEBUG
+    #DEBUG = False
+    #gui = GuiTurtle()
+    #gui.intro()
+    #input("The end!")
 
 if __name__=="__main__":
     main()

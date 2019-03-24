@@ -6,6 +6,9 @@
 import hesperus
 import tensorflow as tf
 
+def gamestate2vec(gamestate):
+    pass
+
 class Aedificator(hesperus.AI):
     pass
 
