@@ -5,10 +5,49 @@
 
 from turtle import Turtle
 import time
+import numpy as np
 
 from constants import *
 from gamestate import GameState
-from ai import AICom
+#from ai import AICom
+
+COORDINATE_MATRIX1 = np.matrix([[0, 1], [np.cos(np.pi/6), -1/2]])
+COORDINATE_MATRIX2 = np.linalg.inv(COORDINATE_MATRIX1)
+
+RADIUS = 300 # Radius of logo in intro
+HOUSE  = 50
+STAR   = 30
+COLORS = {"sky":(0,0,0.3),
+          "ground":(0,0,0),
+          "star":(1,1,0.5),
+          "road":(0.7,0.4,0.1),
+          "sea":(0.8, 0.9, 1),
+          "robber":(0.2, 0.1, 0),
+
+          "player0":(0.1,0.1,0.8),
+          "player1":(0.8,0,0),
+          "player2":(1,0.6,0),
+          "player3":(1,1,1),
+
+          "pink":(1,0.3,0.7),
+          "L":(  0, 0.4,   0),
+          "B":(0.9, 0.4, 0.1),
+          "G":(  1, 0.9, 0.1),
+          "W":(0.6,   1, 0.4),
+          "O":(0.4, 0.4, 0.4),
+          "D":(  1, 0.9, 0.5),
+         }
+
+HEX_LENGTH = 60
+
+def cart2hex(v):
+    return 1/HEX_LENGTH * (np.matrix(v) * COORDINATE_MATRIX2)
+
+def hex2cart(u):
+    r = (HEX_LENGTH * (u*COORDINATE_MATRIX1)).tolist()
+    # r is now a list containing exactly one list.
+    r = tuple(r[0])
+    return r
 
 class GuiMinimal:
     def __init__(self,test=False):
@@ -22,7 +61,7 @@ class GuiMinimal:
             else:
                 print("Invalid answer, only 3 or 4 players possible!")
 
-    def ask_player_type(self, number, list_type):
+    def ask_player_type(self, number, dict_ai):
         #print("TEST")
         #print(COMONLY)
         #if (number in (0,1)) and (not COMONLY):
@@ -30,17 +69,16 @@ class GuiMinimal:
             #return AIUser
         #else:
             #return AICom
-        if COMONLY:
-            return AICom
-        else:
-            while True:
-                raw_player = input(f"Who shall play player {number}? ")
-                if raw_player.lower() in ("com", "aicom"):
-                    return AICom
-                elif raw_player.lower() in ("user", "aiuser"):
-                    return AIUser
-                else:
-                    print("That is not a valid player type!")
+        #if COMONLY:
+            #return AICom
+        #else:
+        while True:
+            player_types = dict_ai.keys()
+            s = ", ".join(player_types)
+            raw_player = input(f"Who shall play player {number}? ("+s+") ").lower()
+            if raw_player in dict_ai.keys():
+                return dict_ai[raw_player]
+            print("That is not a valid player type!")
     
     def draw_board(self, game_state):
         if not self.test:
@@ -158,7 +196,7 @@ class GuiTurtle(GuiMinimal):
 
     ### INTRO ANIMATION
     def intro(self):
-        if DEBUG and __name__ == "__main__":
+        if DEBUG: # and __name__ == "__main__":
             return
         t = self.t
         t.ht()

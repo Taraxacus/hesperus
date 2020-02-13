@@ -3,13 +3,16 @@
 # Date: 2019-03-24
 # ai.py:
 
-from constants import *
-from gamestate import GameState
 from random import choice, randint
+
+from constants import *
+#from gamestate import GameState
 
 class AI:
     def __init__(self, number):
         self.number = number
+
+        self.name = f"Player {number}"
 
     def check(self):
         return True
@@ -99,6 +102,8 @@ class AICom(AIRandom):
         self.next_settlement = None
         self.next_city = None
 
+        self.name = f"COM {number}"
+
     def best_settlement_location(self, game_state):#, initial_settlements=True):
         crossings = game_state.available_crossings()
         dir_points = {2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1}
@@ -130,6 +135,9 @@ class AICom(AIRandom):
 
 class AIUser(AI):
     def check(self):
+        self.name = input("Please enter a name: ")
+        if self.name == "":
+            self.name = f"User {self.number}"
         input(f"You are player {self.number}. Press enter if you are ready. ")
         return True
 
@@ -177,3 +185,5 @@ class AIUser(AI):
 #What do you want to do? ")
         game_state.print_state()
         return input(f"You are player {n}. What do you want to do? ")
+
+dict_ai = {"random":AIRandom, "com":AICom, "user":AIUser}

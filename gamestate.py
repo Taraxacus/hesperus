@@ -1,10 +1,24 @@
 #!/usr/bin/python
-# Author: Maximilian Weinberg
+    # Author: Maximilian Weinberg
 # Date: 2019-03-24
 # gamestate.py:
 
-from constants import *
 from random import shuffle, choice
+from numpy.random import choice as npchoice
+
+from constants import *
+
+HEXES = 4*["L"] + 3*["B"] + 4*["G"] + 4*["W"] + 3*["O"] + ["D"]
+SPIRALS = [[ 1, 2, 3, 7,12,16,19,18,17,13, 8, 4, 5, 6,11,15,14, 9,10],
+           [ 3, 7,12,16,19,18,17,13, 8, 4, 1, 2, 6,11,15,14, 9, 5,10],
+           [12,16,19,18,17,13, 8, 4, 1, 2, 3, 7,11,15,14, 9, 5, 6,10],
+           [19,18,17,13, 8, 4, 1, 2, 3, 7,12,16,15,14, 9, 5, 6,11,10],
+           [17,13, 8, 4, 1, 2, 3, 7,12,16,19,18,14, 9, 5, 6,11,15,10],
+           [ 8, 4, 1, 2, 3, 7,12,16,19,18,17,13, 9, 5, 6,11,15,14,10],
+          ]
+CHIP_ORDERS = [[HEXCOORS[i-1] for i in spiral] for spiral in SPIRALS]
+CHIPS = [ 5, 2, 6, 3, 8,10, 9,12,11, 4, 8,10, 9, 4, 5, 6, 3,11]
+#CHIPS = list(range(19))
 
 class GameState:
     def __init__(self, number_players, victory_points_to_win=10):
@@ -36,6 +50,7 @@ class GameState:
 
         self.largest_army = (0, None)
 
+    # READ methods
     def are_adjacent_crossings(self, crossing1, crossing2):
         return (vec_diff(crossing1, crossing2) in DIRECTIONS)
 
@@ -52,6 +67,14 @@ class GameState:
             if point in CROSSINGS:
                 paths.add(frozenset({crossing, point}))
         return paths
+
+    def adjacent_crossings(self, crossing):
+        crossings = set()
+        for direction in DIRECTIONS:
+            point = vec_add(crossing, direction)
+            if point in CROSSINGS:
+                crossings.add(point)
+        return crossings
 
     def adjacent_hexcoors(self, crossing):
         hexcoors = set()
@@ -71,13 +94,6 @@ class GameState:
         free_crossings = self.free_crossings()
         other_crossings = CROSSINGS - free_crossings
         return {crossing for crossing in free_crossings if all(not(vec_add(crossing, direction) in other_crossings) for direction in DIRECTIONS)}
-
-    def pays(self, n, cost):
-        if all(cost[resource] <= self.dir_resources[n][resource] for resource in RESOURCES):
-            for resource in RESOURCES:
-                self.dir_resources[n][resource] -= cost[resource]
-            return True
-        return False
 
     def network(self, n):
         network = set()
@@ -107,8 +123,14 @@ class GameState:
     def cities_of(self, n):
         return {crossing for crossing in self.dir_crossings if self.dir_crossings[crossing] == (2,n)}
 
+    def has_largest_army(self, n):
+        return self.largest_army[0] == n
+
     def number_resources(self, n):
         return sum(self.dir_resources[n].values())
+
+    def can_afford(self, n, cost):
+        return all(cost[resource] <= self.dir_resources[n][resource] for resource in RESOURCES)
 
     def adjacent_players(self, hexcoor):
         players = set()
@@ -118,12 +140,6 @@ class GameState:
             if not piece == None:
                 players.add(piece[1])
         return players
-
-    def update_armies(self, n):
-        self.dir_devcards[n] -= 1
-        self.dir_knights[n] += 1
-        if self.dir_knights[n] > self.largest_army[0]:
-            self.largest_army = (self.dir_knights[n], n)
 
     def victory_points(self, n):
         vps = 0
@@ -145,7 +161,8 @@ class GameState:
         if m == 0:
             return None
         p = [(resources[resource]/m) for resource in resources]
-        return np.random.choice(list(resources.keys()), p=p)
+        #return np.random.choice(list(resources.keys()), p=p)
+        return npchoice(list(resources.keys()), p=p)
 
     def print_state(self):
         for n in range(self.number_players):
@@ -155,3 +172,83 @@ class GameState:
             vps = self.victory_points(n)
             print(f"Player {n}: Resources: {resources}; {devcards} devcards, {knights} knights, {vps} victory points.")
 
+    # WRITE methods
+    def pays(self, n, cost):
+        if self.can_afford(n, cost):
+            for resource in RESOURCES:
+                self.dir_resources[n][resource] -= cost[resource]
+            return True
+        return False
+
+    def update_armies(self, n):
+        self.dir_devcards[n] -= 1
+        self.dir_knights[n] += 1
+        if self.dir_knights[n] > max(self.largest_army[0],2):
+            self.largest_army = (self.dir_knights[n], n)
+
+    def update_roads(self, n, path=None):
+        if path == None:
+            # Insert full algorithm here
+            pass
+        else:
+            for crossing1 in path:
+                m = 0
+                if self.dir_crossings[crossing1] != None:
+                    if self.dir_crossings[crossing1][1] != n:
+                        m = 1
+                if m == 0:
+                    for direction in DIRECTIONS:
+                        crossing2 = vec_add(crossing1, direction)
+                        path2 = frozenset({crossing1, crossing2})
+                        if path2 in PATHS:
+                            if self.dir_paths[path2] == n:
+                                m += 1
+                if m == 1:
+                    # crossing1 is an end
+                    # Count longest road starting at crossing1
+                    pass
+                    return
+            # Both crossing1 and crossing2 are connected to roads
+            # Call full counting algorithm
+
+    ### Actions
+    def build_road(self, n, path):
+        if path in self.accessible_paths(n):
+            cost = PRICES["road"]
+            if self.pays(n, cost):
+                self.dir_paths[path] = n
+                return 0
+            else:
+                return 1
+        else:
+            return 2
+
+    def build_settlement(self, n, crossing):
+        if crossing in self.accessible_crossings(n):
+            cost = PRICES["settlement"]
+            if self.pays(n, cost):
+                self.dir_crossings[crossing] = (1,n)
+                return 0
+            else:
+                return 1
+        else:
+            return 2
+
+    def build_city(self, n, crossing):
+        if crossing in self.settlements_of(n):
+            cost = PRICES["city"]
+            if self.pays(n, cost):
+                self.dir_crossings[crossing] = (2,n)
+                return 0
+            elif not DEBUG:
+                return 1
+        else:
+            return 2
+
+    def buy_devcard(self, n):
+        cost = PRICES["devcard"]
+        if self.pays(n, cost):
+            self.dir_devcards[n] += 1
+            return 0
+        else:
+            return 1

@@ -12,6 +12,8 @@ from ui import *
 from game import run
 from test import test
 
+# For testing
+#from aedificator import GuiNN
 
 def main():
     # Ask variables
@@ -38,6 +40,7 @@ def main():
         gui = GuiMinimal(test=True)
     else:
         gui = GuiTurtle()
+        #gui = GuiNN()
 
     # Run gui intro
     gui.intro()
@@ -46,7 +49,7 @@ def main():
     if tests:
         test(gui)
     else:
-        run(gui)
+        run(gui, COMONLY)
 
     # Exit
     input("Hesperus terminated successfully! (Press enter to exit)")

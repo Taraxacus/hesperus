@@ -4,6 +4,7 @@
 # test.py:
 
 from game import run
+import numpy as np
 
 def test(gui):
     try:

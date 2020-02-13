@@ -4,26 +4,30 @@
 # game.py:
 
 import time
+from random import randint
 
 from constants import *
 from gamestate import GameState
-from ai import *
+from ai import dict_ai as dict_ai_default
 
 def roll_dice():
     return randint(1,6)+randint(1,6)
 
-def run(gui):
+def run(gui, comonly=True, dict_ai=dict_ai_default):
     times = []
     time_start = time.time()
 
     # Initialize players
-    if not COMONLY:
+    if not comonly:
         number_players = gui.ask_number_players()
     else:
         number_players = 4
     players = []
     for n in range(number_players):
-        AIClass = gui.ask_player_type(n, [AI, AIRandom, AIUser])
+        if comonly:
+            AIClass = dict_ai["com"]
+        else:
+            AIClass = gui.ask_player_type(n, dict_ai)
         players.append(AIClass(n))
 
     game_state = GameState(number_players)
@@ -71,18 +75,19 @@ def run(gui):
         #running = False
     while running:
         turn += 1
+        roundd = turn//number_players
 
         if not DEBUG:
             gui.draw_board(game_state)
         if turn%number_players ==0:
-            roundd = turn//number_players
             if roundd == 1000:
                 running = False
             else:
                 gui.print(f"We're going into round {roundd}!")
 
-        #gui.print("\n" + 5*"*" + f" ROUND {roundd}, TURN {turn}, PLAYER {n} " + 5*"*" + "\n")
-        gui.print("\n" + 5*"*" + f" TURN {turn}, PLAYER {n} " + 5*"*" + "\n")
+        gui.print("\n" + 5*"*" + f" ROUND {roundd}, TURN {turn}, PLAYER {n} " + 5*"*" + "\n")
+        gui.print(f"It's the turn of Player '{players[n].name}'")
+        #gui.print("\n" + 5*"*" + f" TURN {turn}, PLAYER {n} " + 5*"*" + "\n")
 
         # Dice roll
         w = roll_dice()
@@ -160,60 +165,44 @@ def run(gui):
             # Command build/buy
             elif command in ("b", "build", "buy"):
                 arg = list_action[1]
-                if arg in ("r", "road"):
-                    try:
+                try:
+                    if arg in ("r", "road"):
                         crossing1 = (int(list_action[2]), int(list_action[3]))
                         crossing2 = (int(list_action[4]), int(list_action[5]))
                         path = frozenset({crossing1, crossing2})
-                        if path in game_state.accessible_paths(n):
-                            cost = PRICES["road"]
-                            if game_state.pays(n, cost):
-                                game_state.dir_paths[path] = n
-                                gui.print(f"Player {n} build a road at {path}.")
-                            elif not DEBUG:
-                                gui.print("You cannot afford to do that!")
-                        else:
-                            gui.print("That is not an accessible path location!")
-                    except Exception as e:
-                        print("Something failed!")
-                        print(e)
-                if arg in ("s", "settlement"):
-                    try:
+                        error_code = game_state.build_road(n, path)
+                        if error_code == 0:
+                            gui.print(f"Player {n} build a road at {path}.")
+                    elif arg in ("s", "settlement"):
                         crossing = (int(list_action[2]), int(list_action[3]))
-                        if crossing in game_state.accessible_crossings(n):
-                            cost = PRICES["settlement"]
-                            if game_state.pays(n, cost):
-                                game_state.dir_crossings[crossing] = (1,n)
-                                gui.print(f"Player {n} build a settlement at {crossing}.")
-                            elif not DEBUG:
-                                gui.print("You cannot afford to do that!")
-                        else:
-                            gui.print("That is not an accessible settlement location!")
-                    except Exception as e:
-                        print("Something failed!")
-                        print(e)
-                if arg in ("c", "city"):
-                    try:
+                        error_code = game_state.build_settlement(n, crossing)
+                        if error_code == 0:
+                            gui.print(f"Player {n} build a settlement at {crossing}.")
+                    elif arg in ("c", "city"):
                         crossing = (int(list_action[2]), int(list_action[3]))
-                        if crossing in game_state.settlements_of(n):
-                            cost = PRICES["city"]
-                            if game_state.pays(n, cost):
-                                game_state.dir_crossings[crossing] = (2,n)
-                                gui.print(f"Player {n} build a city at {crossing}.")
-                            elif not DEBUG:
-                                gui.print("You cannot afford to do that!")
-                        else:
-                            gui.print("That is not the location of one of your settlements!")
-                    except Exception as e:
-                        print("Something failed!")
-                        print(e)
-                if arg in ("d", "devcard"):
-                    cost = PRICES["devcard"]
-                    if game_state.pays(n, cost):
-                        game_state.dir_devcards[n] += 1
-                        gui.print(f"Player {n} bought a devcard.")
-                    elif not DEBUG:
+                        error_code = game_state.build_city(n, crossing)
+                        if error_code == 0:
+                            gui.print(f"Player {n} build a city at {crossing}.")
+                    elif arg in ("d", "devcard"):
+                        error_code = game_state.buy_devcard(n)
+                        if error_code == 0:
+                            gui.print(f"Player {n} bought a devcard.")
+                    else:
+                        error_code = 3
+                except:
+                    print("Something failed. Are the coordinates correct?")
+                    print(e)
+
+                # Error messages
+                if error_code != 0:
+                    if error_code == 1:
                         gui.print("You cannot afford to do that!")
+                    elif error_code == 2:
+                        gui.print("You cannot build there!")
+                    elif error_code == 3:
+                        gui.print("Unknown argument: {arg}")
+                    else:
+                        gui.print("An unexpected error occured!")
 
             # Command play devcard
             elif command in ("p", "play", "d", "devcard"):
@@ -249,8 +238,8 @@ def run(gui):
         vps[n] = game_state.victory_points(n)
     gui.print("The game ends!")
     for n in range(number_players):
-        gui.print(f"Player {n} has {vps[n]} victory points!")
-    gui.print(f"The winner is player {winner}!")
+        gui.print(f"Player {n} ({players[n].name})  has {vps[n]} victory points!")
+    gui.print(f"The winner is player {winner} ({players[winner].name})!")
 
     times.append(time.time() - time_start)
     return turn, times
