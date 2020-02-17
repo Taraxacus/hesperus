@@ -20,6 +20,8 @@ CHIP_ORDERS = [[HEXCOORS[i-1] for i in spiral] for spiral in SPIRALS]
 CHIPS = [ 5, 2, 6, 3, 8,10, 9,12,11, 4, 8,10, 9, 4, 5, 6, 3,11]
 #CHIPS = list(range(19))
 
+PORTS = RESOURCES + 4*["X"]
+
 class GameState:
     def __init__(self, number_players, victory_points_to_win=10):
         self.number_players = number_players
@@ -40,6 +42,10 @@ class GameState:
                 j+=1
             else:
                 self.robber = coor
+
+        ports = PORTS.copy()
+        shuffle(ports)
+        self.dir_ports = dict(zip(PORTCOORS, ports))
 
         # Initialize state variables
         self.dir_crossings = {crossing:None for crossing in CROSSINGS}
@@ -140,6 +146,19 @@ class GameState:
             if not piece == None:
                 players.add(piece[1])
         return players
+
+    def price(self, n, resource):
+        price = 4
+        for port in PORTCOORS:
+            if self.dir_ports[port] == resource:
+                for crossing in port:
+                    if self.dir_crossings[crossing] in [(1,n), (2,n)]:
+                        return 2
+            elif self.dir_ports[port] == "X":
+                for crossing in port:
+                    if self.dir_crossings[crossing] in [(1,n), (2,n)]:
+                        price = 3
+        return price
 
     def victory_points(self, n):
         vps = 0

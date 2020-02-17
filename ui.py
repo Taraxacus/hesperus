@@ -36,6 +36,7 @@ COLORS = {"sky":(0,0,0.3),
           "W":(0.6,   1, 0.4),
           "O":(0.4, 0.4, 0.4),
           "D":(  1, 0.9, 0.5),
+          "X":(0.7, 0.2,   1),
          }
 
 HEX_LENGTH = 60
@@ -124,6 +125,13 @@ class GuiTurtle(GuiMinimal):
         self.t.goto(hex2cart((-3,-6)))
         self.t.goto(hex2cart(( 3,-3)))
         self.t.end_fill()
+
+        # Draw ports
+        for port in game_state.dir_ports:
+            for coor in port:
+                color = COLORS[game_state.dir_ports[port]]
+                self.t.goto(hex2cart(coor))
+                self.t.dot(40, color)
 
         # Draw hexes
         for coor, h in game_state.dir_hexes.items():

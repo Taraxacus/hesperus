@@ -42,3 +42,15 @@ for crossing in CROSSINGS:
         if point in CROSSINGS:
             PATHS.add(frozenset({crossing, point}))
 
+PORTCOORS = [[[ 3,-1], [ 4, 0]],
+             [[ 5, 2], [ 5, 3]],
+             [[ 4, 4], [ 3, 4]],
+             [[ 1, 4], [ 0, 4]],
+             [[-2, 3], [-3, 2]],
+             [[-4, 0], [-4,-1]],
+             [[-4,-3], [-4,-4]],
+             [[-3,-5], [-2,-5]],
+             [[ 0,-4], [ 1,-3]]]
+PORTCOORS = [(tuple(i[0]), tuple(i[1])) for i in PORTCOORS]
+PORTCOORS2 = [coor for port in PORTCOORS for coor in port]
+

@@ -154,13 +154,16 @@ def run(gui, comonly=True, dict_ai=dict_ai_default):
                     resource1 = list_action[1]
                     resource2 = list_action[2]
                     cost = {resource:0 for resource in RESOURCES}
-                    cost[resource1] += 4
+                    price = game_state.price(n, resource1)
+                    cost[resource1] += price
                     if game_state.pays(n, cost):
                         game_state.dir_resources[n][resource2] += 1
+                        gui.print(f"Player {n} traded {price} {resource1} for 1 {resource2}")
+                        input("How about that?")
                     elif not DEBUG:
                         gui.print("You cannot afford to do that!")
                 except:
-                    print("Something failed!")
+                    gui.print("Something failed!")
 
             # Command build/buy
             elif command in ("b", "build", "buy"):
@@ -190,8 +193,8 @@ def run(gui, comonly=True, dict_ai=dict_ai_default):
                     else:
                         error_code = 3
                 except:
-                    print("Something failed. Are the coordinates correct?")
-                    print(e)
+                    gui.print("Something failed. Are the coordinates correct?")
+                    gui.print(e)
 
                 # Error messages
                 if error_code != 0:
@@ -200,7 +203,7 @@ def run(gui, comonly=True, dict_ai=dict_ai_default):
                     elif error_code == 2:
                         gui.print("You cannot build there!")
                     elif error_code == 3:
-                        gui.print("Unknown argument: {arg}")
+                        gui.print(f"Unknown argument: {arg}")
                     else:
                         gui.print("An unexpected error occured!")
 

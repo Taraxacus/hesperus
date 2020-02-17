@@ -54,12 +54,15 @@ class AIKnight(AI):
                 if hexcoor in game_state.dir_chips:
                     points += m*dir_points[game_state.dir_chips[hexcoor]]
                 #print(hexcoor,hexx,m,points)
+            if hexcoor in PORTCOORS2:
+                points += 100
             if mode == 1:
                 distance = self.get_distance(game_state, crossing)
                 if distance == -1:
                     points = -2001
                 else:
                     points -= self.distance_multiplier*distance
+
             if points == best_points:
                 resources = [game_state.dir_hexes[hexcoor] for hexcoor in hexcoors]
                 #print(crossing, resources, points)
@@ -177,7 +180,7 @@ class AIKnight(AI):
             command = "b d"
         else:
             # TODO Handeln?
-            sellables = {resource for resource in RESOURCES if resources[resource] >= 4}
+            sellables = {resource for resource in RESOURCES if resources[resource] >= game_state.price(self.number, resource)}
             if len(sellables) != 0:
                 buyables = {resource for resource in RESOURCES if resources[resource] == 0}
                 buyables -= {"W"} # Never trade for wool. Just don't.
