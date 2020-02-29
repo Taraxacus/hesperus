@@ -13,3 +13,7 @@ G - grain
 W - wool
 O - ore
 D - desert
+
+Dependency diagram:
+
+![alt-text](/images/graph.png)
