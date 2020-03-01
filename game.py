@@ -100,7 +100,10 @@ def run(gui, comonly=True, dict_ai=dict_ai_default):
                 if hand > 7:
                     players[m].get_robbed(game_state)
                     if not game_state.number_resources(m) == (hand - hand//2):
-                        gui.print("Player {m} cheated the robber!")
+                        gui.print(f"Player {m} cheated the robber!")
+                    else:
+                        gui.print(f"Player {m} got robbed!")
+                        input("How about that?")
             hexcoor, player = players[n].set_robber(game_state)
             game_state.robber = hexcoor
             if not player == None:
@@ -108,6 +111,7 @@ def run(gui, comonly=True, dict_ai=dict_ai_default):
                 if not resource == None:
                     game_state.dir_resources[player][resource] -= 1
                     game_state.dir_resources[n][resource] += 1
+                    gui.print(f"Player {n} robbed {resource} from player {player}!")
             gui.draw_board(game_state)
         else:
             # Resources
@@ -159,7 +163,7 @@ def run(gui, comonly=True, dict_ai=dict_ai_default):
                     if game_state.pays(n, cost):
                         game_state.dir_resources[n][resource2] += 1
                         gui.print(f"Player {n} traded {price} {resource1} for 1 {resource2}")
-                        input("How about that?")
+                        #input("How about that?")
                     elif not DEBUG:
                         gui.print("You cannot afford to do that!")
                 except:
@@ -242,7 +246,10 @@ def run(gui, comonly=True, dict_ai=dict_ai_default):
     gui.print("The game ends!")
     for n in range(number_players):
         gui.print(f"Player {n} ({players[n].name})  has {vps[n]} victory points!")
-    gui.print(f"The winner is player {winner} ({players[winner].name})!")
+    if winner != None:
+        gui.print(f"The winner is player {winner} ({players[winner].name})!")
+    else:
+        gui.print("The game ends without a winner!")
 
     times.append(time.time() - time_start)
     return turn, times

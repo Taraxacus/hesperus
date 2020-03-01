@@ -9,11 +9,12 @@ from constants import *
 from ai import AI, dict_ai
 #import tensorflow as tf
 
-from ui import *
+# For testing
+from ui import GuiTurtle
 from game import run
 
-class GuiTest(GuiTurtle):
-    pass
+#class GuiTest(GuiTurtle):
+    #pass
     #def ask_player_type(self, number, dict_ai):
         #pass
 
@@ -55,7 +56,7 @@ class AIKnight(AI):
                     points += m*dir_points[game_state.dir_chips[hexcoor]]
                 #print(hexcoor,hexx,m,points)
             if hexcoor in PORTCOORS2:
-                points += 100
+                points += 80
             if mode == 1:
                 distance = self.get_distance(game_state, crossing)
                 if distance == -1:

@@ -189,6 +189,9 @@ class GameState:
             devcards = self.dir_devcards[n]
             knights = self.dir_knights[n]
             vps = self.victory_points(n)
+            #resource_string = ""
+            #for resource in resources:
+                #resource_string += resources[resource] * (resource + " ")
             print(f"Player {n}: Resources: {resources}; {devcards} devcards, {knights} knights, {vps} victory points.")
 
     # WRITE methods

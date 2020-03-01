@@ -8,7 +8,7 @@ import time
 import numpy as np
 
 from constants import *
-from gamestate import GameState
+#from gamestate import GameState
 #from ai import AICom
 
 COORDINATE_MATRIX1 = np.matrix([[0, 1], [np.cos(np.pi/6), -1/2]])
@@ -172,7 +172,7 @@ class GuiTurtle(GuiMinimal):
                 elif piece[0] == 2:
                     color = COLORS["player"+str(piece[1])]
                     self.t.goto(hex2cart(coor))
-                    self.t.dot(35, color)
+                    self.t.dot(30, color)
 
         # Draw robber
         self.t.goto(hex2cart(game_state.robber))
@@ -304,3 +304,10 @@ class GuiTurtle(GuiMinimal):
         time.sleep(3)
         time.sleep(0.3)
         t.reset()
+
+def main():
+    GuiMinimal()
+    GuiTurtle()
+
+if __name__ == "__main__":
+    main()
