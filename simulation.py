@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Author: Maximilian Weinberg
 # Date: 2019-03-24
-# test.py:
+# simulation.py:
 
 from game import run
 import numpy as np

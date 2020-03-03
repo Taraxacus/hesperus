@@ -6,7 +6,7 @@
 from random import choice
 
 from constants import *
-from ai import AI, dict_ai
+from player import AI, dict_ai
 #import tensorflow as tf
 
 # For testing

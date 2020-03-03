@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Author: Maximilian Weinberg
 # Date: 2019-03-24
-# ai.py:
+# player.py:
 
 from random import choice, randint
 

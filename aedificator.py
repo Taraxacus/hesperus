@@ -4,7 +4,7 @@
 # aedificator.py:
 
 from constants import *
-from ai import AI
+from player import AI
 #import tensorflow as tf
 
 # For testing

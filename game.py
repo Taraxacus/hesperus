@@ -8,7 +8,7 @@ from random import randint
 
 from constants import *
 from gamestate import GameState
-from ai import dict_ai as dict_ai_default
+from player import dict_ai as dict_ai_default
 
 def roll_dice():
     return randint(1,6)+randint(1,6)

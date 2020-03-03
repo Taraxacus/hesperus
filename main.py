@@ -10,7 +10,7 @@
 #from ai import *
 from ui import *
 from game import run
-from test import test
+from simulation import test
 
 # For testing
 #from aedificator import GuiNN
