@@ -50,7 +50,7 @@ def hex2cart(u):
     r = tuple(r[0])
     return r
 
-class GuiMinimal:
+class UiMinimal:
     def __init__(self,test=False):
         self.test = test
 
@@ -80,6 +80,15 @@ class GuiMinimal:
             if raw_player in dict_ai.keys():
                 return dict_ai[raw_player]
             print("That is not a valid player type!")
+
+    def ask_players(self, dict_ai):
+        number_players = self.ask_number_players()
+        players = []
+        for n in range(number_players):
+            AIClass = self.ask_player_type(n, dict_ai)
+            players.append(AIClass(n))
+        # Do list comprehension?
+        return players
     
     def draw_board(self, game_state):
         if not self.test:
@@ -98,7 +107,7 @@ class GuiMinimal:
             print(string)
         #pass
 
-class GuiTurtle(GuiMinimal):
+class GuiTurtle(UiMinimal):
     def __init__(self, test=False):
         self.test = test
 
@@ -306,7 +315,7 @@ class GuiTurtle(GuiMinimal):
         t.reset()
 
 def main():
-    GuiMinimal()
+    UiMinimal()
     GuiTurtle()
 
 if __name__ == "__main__":

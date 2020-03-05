@@ -9,7 +9,7 @@ from player import AI
 
 # For testing
 from gamestate import GameState
-from ui import GuiMinimal
+from ui import UiMinimal
 
 res2num = {"L":-1, "B":-2, "G":-3, "W":-4, "O":-5, "D":-6}
 
@@ -126,7 +126,7 @@ def gamestate2vec(gamestate):
 
     return l
 
-class GuiNN(GuiMinimal):
+class GuiNN(UiMinimal):
     def draw_board(self, gamestate):
         dic1, dic2, dic3, dic4, dic5, dic6 = gamestate2dic(gamestate)
 

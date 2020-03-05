@@ -9,6 +9,8 @@
 #from gamestate import GameState
 #from ai import *
 from ui import *
+#from player import dict_ai
+from actor import dict_ai
 from game import run
 from simulation import test
 
@@ -19,14 +21,14 @@ def main():
     # Ask variables
     global DEBUG
     global COMONLY
+    #DEBUG = True
+    #COMONLY = True
+
     if input("Start in debug mode? ") in ("n", "N", "no"):
         DEBUG = False
-    else:
-        DEBUG = True
     if input("Let the computer play against itself? ") in ("n", "N", "no"):
         COMONLY = False
-    else:
-        COMONLY = True
+
     if COMONLY:
         if input("Run some test games? ") in ("n", "N", "no"):
             tests = False
@@ -35,21 +37,31 @@ def main():
     else:
         tests = False
 
-    # Set gui
+    # Set ui
     if tests:
-        gui = GuiMinimal(test=True)
+        ui = UiMinimal(test=True)
     else:
-        gui = GuiTurtle()
-        #gui = GuiNN()
+        ui = GuiTurtle()
+        #ui = GuiNN()
 
-    # Run gui intro
-    gui.intro()
+    # Run ui intro
+    ui.intro()
 
     # Run tests/game
     if tests:
-        test(gui)
+        test(ui)
     else:
-        run(gui, COMONLY)
+        if COMONLY:
+            players = [dict_ai["com"](i) for i in range(4)]
+        else:
+            players = ui.ask_players(dict_ai)
+        #number_players = ui.ask_number_players()
+        #players = []
+        #for n in range(number_players):
+            #AIClass = ui.ask_player_type(n, dict_ai)
+            #players.append(AIClass(n))
+
+        run(ui, players)
 
     # Exit
     input("Hesperus terminated successfully! (Press enter to exit)")

@@ -217,14 +217,16 @@ class AIIndie(AIKnight):
 
         self.name = f"Indie {number}"
 
+dict_ai["knight"] = AIKnight
+dict_ai["traveller"] = AITraveller
+dict_ai["indie"] = AIIndie
+
 def main():
     gui = GuiTurtle()
     gui.intro()
     
-    dict_ai["knight"] = AIKnight
-    dict_ai["traveller"] = AITraveller
-    dict_ai["indie"] = AIIndie
-    run(gui, False, dict_ai)
+    players = gui.ask_players(dict_ai)
+    run(gui, players)
 
     input("That's it!")
 

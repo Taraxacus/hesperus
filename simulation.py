@@ -5,8 +5,13 @@
 
 from game import run
 import numpy as np
+from player import AICom
 
-def test(gui):
+#PLAYERS = 4*[AICom]
+
+def test(ui, players=None):
+    if players is None:
+        players = [AICom(i) for i in range(4)]
     try:
         n = int(input("Number of tests? "))
     except:
@@ -14,7 +19,7 @@ def test(gui):
     list_turns= []
     list_times= []
     for i in range(n):
-        turn, times = run(gui)
+        turn, times = run(ui, players)
         list_turns.append(turn)
         list_times.append(times)
         print(times)
