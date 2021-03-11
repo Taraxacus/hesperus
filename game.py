@@ -31,7 +31,6 @@ def roll_dice():
         #players.append(AIClass(n))
 
 def run(ui, players): #dict_ai=dict_ai_default):
-    times = []
     time_start = time.time()
 
     number_players = len(players)
@@ -44,33 +43,65 @@ def run(ui, players): #dict_ai=dict_ai_default):
         if not player.check():
             return False
 
-    times.append(time.time() - time_start)
     # Initial settlements
     ui.print("\n" + 5*"*" + " INITIAL SETTLEMENTS " + 5*"*" + "\n")
     beginner = randint(0, game_state.number_players-1)
+    settlement_order = []
     for i in range(number_players):
-        n = (beginner+i)%number_players
-        crossing, path = players[n].initial_settlement(game_state)
-        game_state.dir_crossings[crossing] = (1,n)
-        game_state.dir_paths[path] = n
-        ui.draw_board(game_state)
-        ui.print(f"Player {n} build a settlement at {crossing}.")
-        ui.print(f"Player {n} build a road at {path}.")
+        settlement_order.append( (beginner+i)%number_players )
     for i in reversed(range(number_players)):
-        n = (beginner+i)%number_players
-        crossing, path = players[n].initial_settlement(game_state)
-        game_state.dir_crossings[crossing] = (1,n)
-        game_state.dir_paths[path] = n
-        ui.print(f"Player {n} build a settlement at {crossing}.")
-        ui.print(f"Player {n} build a road at {path}.")
-        for hexcoor in game_state.adjacent_hexcoors(crossing):
-            hexx = game_state.dir_hexes[hexcoor]
-            if not hexx in NO_YIELDS:
-                game_state.dir_resources[n][hexx] += 1
+        settlement_order.append( (beginner+i)%number_players )
+    #print(settlement_order)
+
+    for i, n in enumerate(settlement_order):
+        # Build initial crossing and road
+        while True:
+            ui.draw_board(game_state)
+            crossing, path = players[n].initial_settlement(game_state)
+            error_code = game_state.build_initial_settlement(n, crossing, path)
+            if error_code == 0:
+                ui.print(f"Player {n} build a settlement at {crossing}.")
+                ui.print(f"Player {n} build a road at {path}.")
+                break
+            else:
+                if error_code == 1:
+                    ui.print("That crossing is not available!")
+                elif error_code == 2:
+                    ui.print("That is not an adjacent road!")
+                else:
+                    ui.print("Something went wrong!")
+
+        # Distribute initial resources
+        if i >= number_players:
+            for hexcoor in game_state.adjacent_hexcoors(crossing):
+                hexx = game_state.dir_hexes[hexcoor]
+                if not hexx in NO_YIELDS:
+                    game_state.dir_resources[n][hexx] += 1
+        ui.print(f"Player {n} received initial resources.")
         ui.draw_board(game_state)
+
+    #for i in range(number_players):
+        #n = (beginner+i)%number_players
+        #crossing, path = players[n].initial_settlement(game_state)
+        #game_state.dir_crossings[crossing] = (1,n)
+        #game_state.dir_paths[path] = n
+        #ui.draw_board(game_state)
+        #ui.print(f"Player {n} build a settlement at {crossing}.")
+        #ui.print(f"Player {n} build a road at {path}.")
+    #for i in reversed(range(number_players)):
+        #n = (beginner+i)%number_players
+        #crossing, path = players[n].initial_settlement(game_state)
+        #game_state.dir_crossings[crossing] = (1,n)
+        #game_state.dir_paths[path] = n
+        #ui.print(f"Player {n} build a settlement at {crossing}.")
+        #ui.print(f"Player {n} build a road at {path}.")
+        #for hexcoor in game_state.adjacent_hexcoors(crossing):
+            #hexx = game_state.dir_hexes[hexcoor]
+            #if not hexx in NO_YIELDS:
+                #game_state.dir_resources[n][hexx] += 1
+        #ui.draw_board(game_state)
     ui.print(game_state.dir_resources)
 
-    times.append(time.time() - time_start)
     # Actual game loops
     ui.print("\n" + 5*"*" + " GAME STARTS " + 5*"*" + "\n")
     n = beginner
@@ -109,7 +140,7 @@ def run(ui, players): #dict_ai=dict_ai_default):
                         ui.print(f"Player {m} cheated the robber!")
                     else:
                         ui.print(f"Player {m} got robbed!")
-                        input("How about that?")
+                        #input("How about that?")
             hexcoor, player = players[n].set_robber(game_state)
             game_state.robber = hexcoor
             if not player == None:
@@ -257,8 +288,8 @@ def run(ui, players): #dict_ai=dict_ai_default):
     else:
         ui.print("The game ends without a winner!")
 
-    times.append(time.time() - time_start)
-    return turn, times
+    total_time = time.time() - time_start
+    return turn, total_time
 
 #def test(self):
 #    n = roll_dice()

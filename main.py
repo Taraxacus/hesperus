@@ -45,7 +45,8 @@ def main():
         #ui = GuiNN()
 
     # Run ui intro
-    ui.intro()
+    if not DEBUG:
+        ui.intro()
 
     # Run tests/game
     if tests:

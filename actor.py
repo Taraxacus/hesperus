@@ -36,6 +36,8 @@ class AIKnight(AI):
         else:
             crossings = game_state.available_crossings()
         if len(crossings) == 0:
+            #game_state.print_state()
+            #raise Exception
             return set()
         dir_points = {2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1}
 
@@ -115,10 +117,10 @@ class AIKnight(AI):
         return distance
 
     def get_action(self, game_state):
-        print(self.name, "is thinking...")
+        #print(self.name, "is thinking...")
         resources = game_state.dir_resources[self.number]
-        print("Victory points:", game_state.victory_points(self.number))
-        print(resources)
+        #print("Victory points:", game_state.victory_points(self.number))
+        #print(resources)
 
         build_settlement = False
         build_road = False
@@ -156,20 +158,20 @@ class AIKnight(AI):
 
         command = "pass"
         if play_devcard:
-            input(f"{self.number} plays a devcard!")
+            #input(f"{self.number} plays a devcard!")
             command = "p d"
         elif build_settlement:
             s = []
             for i in next_settlement:
                 s.append(str(i))
             command = "b s "+ (" ".join(s))
-            input(f"{self.name} will build a settlement at {s}.")
+            #input(f"{self.name} will build a settlement at {s}.")
         elif build_city:
             s = []
             for i in next_city:
                 s.append(str(i))
             command = "b c "+ (" ".join(s))
-            input(f"{self.name} will build a city at {s}.")
+            #input(f"{self.name} will build a city at {s}.")
         elif build_road:
             s = []
             for crossing in next_path:
@@ -188,14 +190,14 @@ class AIKnight(AI):
                 if len(buyables) == 0:
                     buyables = {"G", "O"} - sellables
                 if len(buyables) == 0:
-                    input(f"THIS IS A RARE CASE!\nResources: {resources}\nSettlement: {settlements}")
+                    #input(f"THIS IS A RARE CASE!\nResources: {resources}\nSettlement: {settlements}")
                     #buyables = {resources for resource in RESOURCES if not (resource in sellables)}
                     buyables = {"W"}
                 resource1 = choice(tuple(sellables))
                 resource2 = choice(tuple(buyables))
                 command = f"t {resource1} {resource2}"
 
-        print(self.number, "does:", command)
+        #print(self.number, "does:", command)
         #input("Continue? ")
         return command
 

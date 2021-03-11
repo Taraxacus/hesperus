@@ -98,7 +98,10 @@ class GameState:
 
     def available_crossings(self):
         free_crossings = self.free_crossings()
+        #if CROSSINGS == free_crossings:
+            #return free_crossings
         other_crossings = CROSSINGS - free_crossings
+        #print(other_crossings)
         return {crossing for crossing in free_crossings if all(not(vec_add(crossing, direction) in other_crossings) for direction in DIRECTIONS)}
 
     def network(self, n):
@@ -234,6 +237,16 @@ class GameState:
             # Call full counting algorithm
 
     ### Actions
+    def build_initial_settlement(self, n, crossing, path):
+        if crossing in self.available_crossings():
+            if self.are_adjacent_crossing_and_path(crossing, path):
+                self.dir_crossings[crossing] = (1,n)
+                self.dir_paths[path] = n
+                return 0
+            else:
+                return 2
+        else:
+            return 1
     def build_road(self, n, path):
         if path in self.accessible_paths(n):
             cost = PRICES["road"]
@@ -262,7 +275,7 @@ class GameState:
             if self.pays(n, cost):
                 self.dir_crossings[crossing] = (2,n)
                 return 0
-            elif not DEBUG:
+            else: #elif not DEBUG:
                 return 1
         else:
             return 2

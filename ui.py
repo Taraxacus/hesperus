@@ -105,6 +105,7 @@ class UiMinimal:
     def print(self, string):
         if not self.test:
             print(string)
+        #print(string)
         #pass
 
 class GuiTurtle(UiMinimal):
@@ -213,8 +214,6 @@ class GuiTurtle(UiMinimal):
 
     ### INTRO ANIMATION
     def intro(self):
-        if DEBUG: # and __name__ == "__main__":
-            return
         t = self.t
         t.ht()
         t.pu()
